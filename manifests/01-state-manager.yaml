@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: state-manager
+  labels:
+    app: state-manager
+    name: state-manager
+  namespace: state-layer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: state-manager
+  template:
+    metadata:
+      labels:
+        name: state-manager
+    spec:
+      containers:
+        - name: state-manager
+          image: proman3419/state-manager:0.0.0.1
+#          imagePullPolicy: "IfNotPresent"
+#          imagePullPolicy: "Always"
+          imagePullPolicy: "Never" # local repository
+          resources:
+            limits:
+              cpu: 500m
+              memory: 500Mi
+          ports:
+            - containerPort: 8000
+              name: sm-port
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: state-manager-svc
+  namespace: state-layer
+spec:
+  selector:
+    name: state-manager
+  ports:
+  - name: sm-port
+    protocol: TCP
+    port: 8000
+    targetPort: sm-port
+# kubectl -n state-layer port-forward svc/state-manager-svc 8000:8000
