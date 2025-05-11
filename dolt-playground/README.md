@@ -11,6 +11,7 @@ kubectl \
   --from-literal=admin-password=hunter2
 ```
 
+Not needed? Dolt provides a built-in client `dolt sql-client -u root -p hunter2`. \
 Install MySQL client within Dolt pod.
 ```
 apt-get update
@@ -99,8 +100,6 @@ delete from employees_teams where employee_id=0 and team_id=1;
 call dolt_commit('-am', 'Modifications on a branch')
 ```
 
-
-
 ## Required features (not presented in the demo)
 
 #### Checkout to a commit?
@@ -122,3 +121,11 @@ This restriction is specific to the SQL interface. In contrast, the CLI allows i
 - https://www.dolthub.com/blog/2021-04-14-JSON-type-support/
 - https://www.dolthub.com/blog/2022-06-30-working-with-json/
 - https://www.dolthub.com/blog/2023-06-07-better-json-support/
+
+#### Programmatic interaction?
+- [doltpy](https://github.com/dolthub/doltpy) - deprecated, don't use
+- SQL queries - preferred
+- CLI client via subprocess - for cases not covered by SQL
+
+CLI client can't be used while SQL server is running, switching between these methods is not an option. \
+Investigate branching using SQL more closely: https://docs.dolthub.com/sql-reference/version-control/branches
