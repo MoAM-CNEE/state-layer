@@ -1,4 +1,5 @@
 ## Setup
+Based on: https://gist.github.com/reltuk/8a97771e8b46dd32e47c80ef0c3645f7
 
 The manifests expect a secret named dolt-credentials to exist in the dolt-cluster-example namespace:
 ```
@@ -16,13 +17,13 @@ apt-get update
 apt-get install default-mysql-client
 ```
 
+## [Hello world](https://docs.dolthub.com/introduction/getting-started/database)
+
 Get the password for DB and connect to it.
 ```
 kubectl -n dolt-cluster-example get secret dolt-credentials -o jsonpath="{.data.admin-password}" 
 mysql --host 127.0.0.1 --port 3306 -u root -p
 ```
-
-## [Hello world](https://docs.dolthub.com/introduction/getting-started/database)
 
 Create schema.
 ```
