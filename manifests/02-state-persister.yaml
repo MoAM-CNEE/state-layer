@@ -17,11 +17,34 @@ metadata:
   namespace: state-layer
 data:
   schema.sql: |
-    CREATE DATABASE mydb;
-    USE mydb;
-    CREATE TABLE user (
+    CREATE DATABASE state_persister_db;
+    USE state_persister_db;
+    
+    CREATE TABLE rule (
         id BIGINT PRIMARY KEY,
-        name VARCHAR(255)
+        _condition VARCHAR(8192),
+        _action TEXT
+    );
+    
+    CREATE TABLE metric (
+        id BIGINT PRIMARY KEY,
+        name VARCHAR(1024),
+        query VARCHAR(8192)
+    );
+    
+    CREATE TABLE environment_entity (
+        id BIGINT PRIMARY KEY,
+        name VARCHAR(1024),
+        namespace VARCHAR(1024),
+        definition TEXT
+    );
+    
+    CREATE TABLE environment_entity_label (
+        id BIGINT PRIMARY KEY,
+        environment_entity_id BIGINT,
+        name VARCHAR(255),
+        value VARCHAR(255),
+        FOREIGN KEY (environment_entity_id) REFERENCES environment_entity(id)
     );
 ---
 apiVersion: apps/v1
@@ -53,17 +76,25 @@ spec:
             - sh
             - -c
             - |
+              echo ">> Configuring user"
               dolt config --global --add user.name "system"
               dolt config --global --add user.email "system@moam.agh.edu.pl"
               if [ ! -d ".dolt" ]; then
                 echo ">> Initializing Dolt"
                 dolt init
-                echo ">> Applying schema"
-                dolt sql < /schema/schema.sql
-                dolt add .
-                dolt commit -m "Initial schema"
               else
                 echo ">> Dolt already initialized. Skipping."
+              fi
+              if [ ! -d "state_persister_db" ]; then
+                echo ">> Applying schema"
+                dolt sql < /schema/schema.sql
+                cd state_persister_db
+                echo ">> Adding changes"
+                dolt add .
+                echo ">> Commiting"
+                dolt commit -m "Initial schema"
+              else
+                echo ">> Schema already applied. Skipping."
               fi
           volumeMounts:
             - name: state-persister-data
