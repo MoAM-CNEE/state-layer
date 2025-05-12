@@ -10,6 +10,43 @@ spec:
     requests:
       storage: 1Gi
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: state-persister-schema
+  namespace: state-layer
+data:
+  schema.sql: |
+    CREATE DATABASE state_persister_db;
+    USE state_persister_db;
+    
+    CREATE TABLE rule (
+        id BIGINT PRIMARY KEY,
+        _condition VARCHAR(8192),
+        _action TEXT
+    );
+    
+    CREATE TABLE metric (
+        id BIGINT PRIMARY KEY,
+        name VARCHAR(1024),
+        query VARCHAR(8192)
+    );
+    
+    CREATE TABLE environment_entity (
+        id BIGINT PRIMARY KEY,
+        name VARCHAR(1024),
+        namespace VARCHAR(1024),
+        definition JSON
+    );
+    
+    CREATE TABLE environment_entity_label (
+        id BIGINT PRIMARY KEY,
+        environment_entity_id BIGINT,
+        name VARCHAR(255),
+        value VARCHAR(255),
+        FOREIGN KEY (environment_entity_id) REFERENCES environment_entity(id)
+    );
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,34 +62,58 @@ spec:
       labels:
         app: state-persister
     spec:
-      containers:
-        - name: postgres
-          image: postgres:15
-          ports:
-            - containerPort: 5432
-          env:
-            - name: POSTGRES_DB
-              value: mydb
-            - name: POSTGRES_USER
-              value: myuser
-            - name: POSTGRES_PASSWORD
-              value: mypassword
-          volumeMounts:
-            - mountPath: /var/lib/postgresql/data
-              name: state-persister-storage
       volumes:
-        - name: state-persister-storage
+        - name: state-persister-data
           persistentVolumeClaim:
             claimName: state-persister-pvc
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: state-persister
-  namespace: state-layer
-spec:
-  selector:
-    app: state-persister
-  ports:
-    - port: 5432
-      targetPort: 5432
+        - name: state-persister-schema
+          configMap:
+            name: state-persister-schema
+      initContainers:
+        - name: dolt-init
+          image: dolthub/dolt:latest
+          command:
+            - sh
+            - -c
+            - |
+              echo ">> Configuring user"
+              dolt config --global --add user.name "system"
+              dolt config --global --add user.email "system@moam.agh.edu.pl"
+              if [ ! -d ".dolt" ]; then
+                echo ">> Initializing Dolt"
+                dolt init
+              else
+                echo ">> Dolt already initialized. Skipping."
+              fi
+              if [ ! -d "state_persister_db" ]; then
+                echo ">> Applying schema"
+                dolt sql < /schema/schema.sql
+                cd state_persister_db
+                echo ">> Adding changes"
+                dolt add .
+                echo ">> Commiting"
+                dolt commit -m "Initial schema"
+              else
+                echo ">> Schema already applied. Skipping."
+              fi
+          volumeMounts:
+            - name: state-persister-data
+              mountPath: /var/dolt
+            - name: state-persister-schema
+              mountPath: /schema
+          workingDir: /var/dolt
+      containers:
+        - name: dolt
+          image: dolthub/dolt:latest
+          command: ["dolt", "sql-server"]
+          ports:
+            - containerPort: 3306
+          env:
+            - name: DOLT_SQL_SERVER_USER
+              value: "root"
+            - name: DOLT_SQL_SERVER_PASSWORD
+              value: ""
+          volumeMounts:
+            - name: state-persister-data
+              mountPath: /var/dolt
+          workingDir: /var/dolt
