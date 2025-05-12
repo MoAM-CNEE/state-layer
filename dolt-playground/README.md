@@ -107,14 +107,11 @@ call dolt_commit('-am', 'Modifications on a branch')
 use `getting_started/lmo75ku2vecfdhpn5f2uk8fkti0o989q`
 ```
 
-#### Create a branch in detached head mode?
+#### Create a branch from a commit?
+https://docs.dolthub.com/sql-reference/version-control/branches/
 ```
-mysql> call dolt_checkout('-b','modifications');
-ERROR 1105 (HY000): fatal: Unexpected error creating branch 'modifications' : this operation is not supported while in a detached head state
-
-When you're in detached HEAD (after checking out a commit directly), CALL dolt_checkout('-b', 'branch') internally tries to both create and checkout a new branch — but creating a branch via SQL in detached HEAD is not allowed.
-
-This restriction is specific to the SQL interface. In contrast, the CLI allows it just fine.
+call dolt_checkout('-b', 'new-branch-at-commit', '5bco52coadmprgsg50e9hd71mcp54db2');
+select * from dolt_branches;
 ```
 
 #### JSON support?
@@ -125,7 +122,6 @@ This restriction is specific to the SQL interface. In contrast, the CLI allows i
 #### Programmatic interaction?
 - [doltpy](https://github.com/dolthub/doltpy) - deprecated, don't use
 - SQL queries - preferred
-- CLI client via subprocess - for cases not covered by SQL
+- CLI client via subprocess
 
-CLI client can't be used while SQL server is running, switching between these methods is not an option. \
-Investigate branching using SQL more closely: https://docs.dolthub.com/sql-reference/version-control/branches
+CLI client can't be used while SQL server is running, switching between these methods is not an option.
