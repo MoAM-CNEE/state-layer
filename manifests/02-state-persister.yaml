@@ -93,9 +93,18 @@ spec:
                 dolt add .
                 echo ">> Commiting"
                 dolt commit -m "Initial schema"
+                cd ..
               else
                 echo ">> Schema already applied. Skipping."
               fi
+              # https://www.dolthub.com/blog/2025-02-05-sql-server-removes-user-pass-args/
+              echo ">> Creating the default user"
+              dolt sql -q "create user '$DOLT_USERNAME' identified by '$DOLT_PASSWORD'; grant all privileges on *.* to '$DOLT_USERNAME' with grant option;"
+          env:
+            - name: DOLT_USERNAME
+              value: "root"
+            - name: DOLT_PASSWORD
+              value: "hunter2"
           volumeMounts:
             - name: state-persister-data
               mountPath: /var/dolt
@@ -105,15 +114,25 @@ spec:
       containers:
         - name: dolt
           image: dolthub/dolt:latest
-          command: ["dolt", "sql-server"]
+          command: ["dolt", "sql-server", "--host", "0.0.0.0"]
           ports:
             - containerPort: 3306
-          env:
-            - name: DOLT_SQL_SERVER_USER
-              value: "root"
-            - name: DOLT_SQL_SERVER_PASSWORD
-              value: ""
           volumeMounts:
             - name: state-persister-data
               mountPath: /var/dolt
           workingDir: /var/dolt
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: state-persister-svc
+  namespace: state-layer
+spec:
+  selector:
+    app: state-persister
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+  type: ClusterIP
+# mysql -h state-persister-svc.state-layer.svc.cluster.local -u root -p
