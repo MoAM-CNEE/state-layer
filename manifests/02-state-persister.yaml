@@ -25,12 +25,16 @@ data:
         _condition VARCHAR(8192),
         _action TEXT
     );
+    ALTER TABLE rule
+    ADD CONSTRAINT unique_condition UNIQUE (_condition);
     
     CREATE TABLE metric (
         id BIGINT PRIMARY KEY,
         name VARCHAR(1024),
         query VARCHAR(8192)
     );
+    ALTER TABLE metric
+    ADD CONSTRAINT unique_metric_name UNIQUE (name);
     
     CREATE TABLE environment_entity (
         id BIGINT PRIMARY KEY,
@@ -38,6 +42,8 @@ data:
         namespace VARCHAR(1024),
         definition JSON
     );
+    ALTER TABLE environment_entity
+    ADD CONSTRAINT unique_name_namespace UNIQUE (name, namespace);
     
     CREATE TABLE environment_entity_label (
         id BIGINT PRIMARY KEY,
@@ -46,6 +52,8 @@ data:
         value VARCHAR(255),
         FOREIGN KEY (environment_entity_id) REFERENCES environment_entity(id)
     );
+    ALTER TABLE environment_entity_label
+    ADD CONSTRAINT unique_entity_label_name UNIQUE (environment_entity_id, name);
 ---
 apiVersion: apps/v1
 kind: Deployment
