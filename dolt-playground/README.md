@@ -1,6 +1,5 @@
 ## Setup
-Based on: https://gist.github.com/reltuk/8a97771e8b46dd32e47c80ef0c3645f7
-
+Based on a quite old entry: https://gist.github.com/reltuk/8a97771e8b46dd32e47c80ef0c3645f7 \
 The manifests expect a secret named dolt-credentials to exist in the dolt-cluster-example namespace:
 ```
 kubectl \
@@ -11,7 +10,7 @@ kubectl \
   --from-literal=admin-password=hunter2
 ```
 
-Not needed? Dolt provides a built-in client `dolt sql-client -u root -p hunter2`. \
+Not needed? Dolt provides a built-in client `dolt sql-client -u root -p hunter2`, in the newer versions it is `dolt sql`.
 Install MySQL client within Dolt pod.
 ```
 apt-get update
