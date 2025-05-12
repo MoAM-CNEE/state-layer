@@ -1,8 +1,8 @@
 FROM python:3.12-bookworm
 
-WORKDIR "/app"
+WORKDIR "/state_manager"
 
-COPY state_manager/* .
+COPY state_manager/ .
 COPY requirements.txt .
 
 RUN pip install -r requirements.txt

@@ -1,11 +1,11 @@
 from fastapi import APIRouter
 
+from schemas.metric import RetrieveMetricRQ
+from services.metric_service import MetricService
+
 router = APIRouter()
+metric_service = MetricService()
 
-@router.get("/ping")
-async def ping():
-    return {"message": "pong"}
-
-@router.get("/hello/{name}")
-async def hello(name: str):
-    return {"message": f"Hello, {name}!"}
+@router.get("/metric")
+async def get_metric():
+    return metric_service.retrieve(RetrieveMetricRQ(name="cluster-memory-usage"))
