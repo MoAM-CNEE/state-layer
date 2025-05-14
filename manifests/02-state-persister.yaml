@@ -25,12 +25,16 @@ data:
         _condition VARCHAR(8192),
         _action TEXT
     );
+    ALTER TABLE rule
+    ADD CONSTRAINT unique_condition UNIQUE (_condition);
     
     CREATE TABLE metric (
         id BIGINT PRIMARY KEY,
         name VARCHAR(1024),
         query VARCHAR(8192)
     );
+    ALTER TABLE metric
+    ADD CONSTRAINT unique_metric_name UNIQUE (name);
     
     CREATE TABLE environment_entity (
         id BIGINT PRIMARY KEY,
@@ -38,6 +42,8 @@ data:
         namespace VARCHAR(1024),
         definition JSON
     );
+    ALTER TABLE environment_entity
+    ADD CONSTRAINT unique_name_namespace UNIQUE (name, namespace);
     
     CREATE TABLE environment_entity_label (
         id BIGINT PRIMARY KEY,
@@ -46,6 +52,8 @@ data:
         value VARCHAR(255),
         FOREIGN KEY (environment_entity_id) REFERENCES environment_entity(id)
     );
+    ALTER TABLE environment_entity_label
+    ADD CONSTRAINT unique_entity_label_name UNIQUE (environment_entity_id, name);
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -93,9 +101,18 @@ spec:
                 dolt add .
                 echo ">> Commiting"
                 dolt commit -m "Initial schema"
+                cd ..
               else
                 echo ">> Schema already applied. Skipping."
               fi
+              # https://www.dolthub.com/blog/2025-02-05-sql-server-removes-user-pass-args/
+              echo ">> Creating the default user"
+              dolt sql -q "create user '$DOLT_USERNAME' identified by '$DOLT_PASSWORD'; grant all privileges on *.* to '$DOLT_USERNAME' with grant option;"
+          env:
+            - name: DOLT_USERNAME
+              value: "root"
+            - name: DOLT_PASSWORD
+              value: "hunter2"
           volumeMounts:
             - name: state-persister-data
               mountPath: /var/dolt
@@ -105,15 +122,25 @@ spec:
       containers:
         - name: dolt
           image: dolthub/dolt:latest
-          command: ["dolt", "sql-server"]
+          command: ["dolt", "sql-server", "--host", "0.0.0.0"]
           ports:
             - containerPort: 3306
-          env:
-            - name: DOLT_SQL_SERVER_USER
-              value: "root"
-            - name: DOLT_SQL_SERVER_PASSWORD
-              value: ""
           volumeMounts:
             - name: state-persister-data
               mountPath: /var/dolt
           workingDir: /var/dolt
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: state-persister-svc
+  namespace: state-layer
+spec:
+  selector:
+    app: state-persister
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+  type: ClusterIP
+# mysql -h state-persister-svc.state-layer.svc.cluster.local -u root -p
