@@ -8,9 +8,11 @@ class EnvironmentEntityRepository:
     def get_by_id(self, entity_id: int):
         return self.db.query(EnvironmentEntity).filter(EnvironmentEntity.id == entity_id).first()
 
-    def create(self, entity_id: int, name: str, namespace: str, definition: dict):
+    def create(self, entity_id: int, api_version: str, kind: str, name: str, namespace: str, definition: dict):
         entity = EnvironmentEntity(
             id=entity_id,
+            api_version=api_version,
+            kind=kind,
             name=name,
             namespace=namespace,
             definition=definition,

@@ -21,35 +21,37 @@ data:
     USE state_persister_db;
     
     CREATE TABLE rule (
-        id BIGINT PRIMARY KEY,
-        _condition VARCHAR(8192),
-        _action TEXT
+        id BIGINT PRIMARY KEY NOT NULL,
+        _condition VARCHAR(8192) NOT NULL,
+        _action TEXT NOT NULL
     );
     ALTER TABLE rule
     ADD CONSTRAINT unique_condition UNIQUE (_condition);
-    
+
     CREATE TABLE metric (
-        id BIGINT PRIMARY KEY,
-        name VARCHAR(1024),
-        query VARCHAR(8192)
+        id BIGINT PRIMARY KEY NOT NULL,
+        name VARCHAR(1024) NOT NULL,
+        query VARCHAR(8192) NOT NULL
     );
     ALTER TABLE metric
     ADD CONSTRAINT unique_metric_name UNIQUE (name);
-    
+
     CREATE TABLE environment_entity (
-        id BIGINT PRIMARY KEY,
-        name VARCHAR(1024),
-        namespace VARCHAR(1024),
-        definition JSON
+        id BIGINT PRIMARY KEY NOT NULL,
+        api_version VARCHAR(255) NOT NULL,
+        kind VARCHAR(255) NOT NULL,
+        name VARCHAR(253) NOT NULL,
+        namespace VARCHAR(63) NOT NULL,
+        definition JSON NOT NULL
     );
     ALTER TABLE environment_entity
-    ADD CONSTRAINT unique_name_namespace UNIQUE (name, namespace);
-    
+    ADD CONSTRAINT unique_environment_entity_name UNIQUE (api_version, kind, name, namespace);
+
     CREATE TABLE environment_entity_label (
-        id BIGINT PRIMARY KEY,
-        environment_entity_id BIGINT,
-        name VARCHAR(255),
-        value VARCHAR(255),
+        id BIGINT PRIMARY KEY NOT NULL,
+        environment_entity_id BIGINT NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        value VARCHAR(255) NOT NULL,
         FOREIGN KEY (environment_entity_id) REFERENCES environment_entity(id)
     );
     ALTER TABLE environment_entity_label

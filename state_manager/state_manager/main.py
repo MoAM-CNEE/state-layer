@@ -19,6 +19,10 @@ def get_db():
         db.close()
 
 
+def get_entity_service(db: Session = Depends(get_db)) -> EntityService:
+    return EntityService(db)
+
+
 @app.get("/rules/{rule_id}")
 def read_rule(rule_id: int, db: Session = Depends(get_db)):
     repo = RuleRepository(db)
@@ -53,9 +57,10 @@ def read_entity(entity_id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/entities/")
-def create_entity(entity_id: int, name: str, namespace: str, definition: dict, db: Session = Depends(get_db)):
+def create_entity(entity_id: int, api_version: str, kind: str, name: str, namespace: str, definition: dict,
+                  db: Session = Depends(get_db)):
     repo = EnvironmentEntityRepository(db)
-    return repo.create(entity_id, name, namespace, definition)
+    return repo.create(entity_id, api_version, kind, name, namespace, definition)
 
 
 @app.get("/entity-labels/{label_id}")
