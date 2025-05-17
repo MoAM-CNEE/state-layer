@@ -107,7 +107,7 @@ spec:
               fi
               # https://www.dolthub.com/blog/2025-02-05-sql-server-removes-user-pass-args/
               echo ">> Creating the default user"
-              dolt sql -q "create user '$DOLT_USERNAME' identified by '$DOLT_PASSWORD'; grant all privileges on *.* to '$DOLT_USERNAME' with grant option;"
+              dolt sql -q "CREATE USER IF NOT EXISTS '$DOLT_USERNAME' IDENTIFIED BY '$DOLT_PASSWORD'; GRANT ALL PRIVILEGES ON *.* TO '$DOLT_USERNAME' WITH GRANT OPTION;"
           env:
             - name: DOLT_USERNAME
               value: "root"
