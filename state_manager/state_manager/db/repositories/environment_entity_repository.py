@@ -8,6 +8,14 @@ class EnvironmentEntityRepository:
     def get_by_id(self, entity_id: int):
         return self.db.query(EnvironmentEntity).filter(EnvironmentEntity.id == entity_id).first()
 
+    def get_by(self, api_version: str, kind: str, name: str, namespace: str):
+        return self.db.query(EnvironmentEntity).filter(
+            EnvironmentEntity.api_version == api_version,
+            EnvironmentEntity.kind == kind,
+            EnvironmentEntity.name == name,
+            EnvironmentEntity.namespace == namespace
+        ).first()
+
     def create(self, api_version: str, kind: str, name: str, namespace: str, definition: dict):
         entity = EnvironmentEntity(
             api_version=api_version,
@@ -20,6 +28,24 @@ class EnvironmentEntityRepository:
         self.db.commit()
         self.db.refresh(entity)
         return entity
+
+    def update(self, api_version: str, kind: str, name: str, namespace: str, new_definition: dict = None):
+        entity = self.get_by(api_version, kind, name, namespace)
+        if not entity:
+            return None
+        if new_definition is not None:
+            entity.definition = new_definition
+        self.db.commit()
+        self.db.refresh(entity)
+        return entity
+
+    def delete(self, api_version: str, kind: str, name: str, namespace: str):
+        entity = self.get_by(api_version, kind, name, namespace)
+        if not entity:
+            return False
+        self.db.delete(entity)
+        self.db.commit()
+        return True
 
     def list_all(self):
         return self.db.query(EnvironmentEntity).all()
