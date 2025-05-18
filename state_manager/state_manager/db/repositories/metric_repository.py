@@ -8,8 +8,8 @@ class MetricRepository:
     def get_by_id(self, metric_id: int):
         return self.db.query(Metric).filter(Metric.id == metric_id).first()
 
-    def create(self, metric_id: int, name: str, query: str):
-        metric = Metric(id=metric_id, name=name, query=query)
+    def create(self, name: str, query: str):
+        metric = Metric(name=name, query=query)
         self.db.add(metric)
         self.db.commit()
         self.db.refresh(metric)

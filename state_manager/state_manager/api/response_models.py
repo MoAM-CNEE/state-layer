@@ -8,3 +8,6 @@ class ControlPlaneApplyRS(BaseModel):
 
 class ControlPlaneDeleteRS(BaseModel):
     change_id: int
+
+
+# TODO: Entity operations RSs

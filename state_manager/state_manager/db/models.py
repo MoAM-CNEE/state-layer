@@ -9,7 +9,7 @@ Base = declarative_base()
 class Rule(Base):
     __tablename__ = 'rule'
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     _condition = Column(String(8192), unique=True, nullable=False)
     _action = Column(Text, nullable=True)
 
@@ -20,7 +20,7 @@ class Rule(Base):
 class Metric(Base):
     __tablename__ = "metric"
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     name = Column(String(1024), unique=True, nullable=False)
     query = Column(String(8192), nullable=False)
 
@@ -31,7 +31,7 @@ class Metric(Base):
 class EnvironmentEntity(Base):
     __tablename__ = "environment_entity"
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     api_version = Column(String(255), nullable=False)
     kind = Column(String(255), nullable=False)
     name = Column(String(253), nullable=False)
@@ -52,7 +52,7 @@ class EnvironmentEntity(Base):
 class EnvironmentEntityLabel(Base):
     __tablename__ = "environment_entity_label"
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     environment_entity_id = Column(BigInteger, ForeignKey("environment_entity.id"), nullable=False)
     name = Column(String(255), nullable=False)
     value = Column(String(255), nullable=False)

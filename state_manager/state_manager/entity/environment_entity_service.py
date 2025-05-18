@@ -37,6 +37,8 @@ class EnvironmentEntityService(EntityService):
                 }
             }
         }))
+        # entity_id: int, api_version: str, kind: str, name: str, namespace: str, definition: dict
+        # self.environment_entity_repository.create()
 
     async def update(self, change_id: int, filter_by: str, lambdas: Dict[str, str]) -> Dict[str, Any]:
         await self.mirror_manager_service.apply(ControlPlaneApplyRQ(change_id=0, entity_definition={

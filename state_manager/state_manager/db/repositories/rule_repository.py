@@ -8,8 +8,8 @@ class RuleRepository:
     def get_by_id(self, rule_id: int):
         return self.db.query(Rule).filter(Rule.id == rule_id).first()
 
-    def create(self, rule_id: int, condition: str, action: str):
-        rule = Rule(id=rule_id, _condition=condition, _action=action)
+    def create(self, condition: str, action: str):
+        rule = Rule(_condition=condition, _action=action)
         self.db.add(rule)
         self.db.commit()
         self.db.refresh(rule)
