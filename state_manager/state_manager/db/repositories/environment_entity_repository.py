@@ -1,28 +1,19 @@
 import json
+from typing import List, Optional
 
 from sqlalchemy import text
-from sqlalchemy.orm import Session
 
-from state_manager.db.models import EnvironmentEntity, EnvironmentEntityLabel
+from state_manager.db.models import EnvironmentEntity
+from state_manager.db.repositories.repository import Repository
 
 
-class EnvironmentEntityRepository:
-    def __init__(self, db: Session):
-        self.db = db
+class EnvironmentEntityRepository(Repository):
+    def get_by(self, **kwargs) -> Optional[EnvironmentEntity]:
+        fields = ['api_version', 'kind', 'name', 'namespace']
+        filters = self.extract_kwargs(kwargs, fields)
+        return self.db.query(EnvironmentEntity).filter_by(**filters).first()
 
-    def get_by_id(self, entity_id: int):
-        return self.db.query(EnvironmentEntity).filter(EnvironmentEntity.id == entity_id).first()
-
-    def get_by(self, api_version: str, kind: str, name: str, namespace: str):
-        return self.db.query(EnvironmentEntity).filter(
-            EnvironmentEntity.api_version == api_version,
-            EnvironmentEntity.kind == kind,
-            EnvironmentEntity.name == name,
-            EnvironmentEntity.namespace == namespace
-        ).first()
-
-    # TODO: Sanitize the query
-    def get_by_filter(self, filter_by: str):
+    def get_by_filter(self, filter_by: str) -> List[EnvironmentEntity]:
         result = self.db.execute(text(filter_by)).fetchall()
         environment_entities = []
         for row in result:
@@ -34,54 +25,27 @@ class EnvironmentEntityRepository:
         self.db.commit()
         return environment_entities
 
-    def create(self, api_version: str, kind: str, name: str, namespace: str, definition: dict):
-        entity = EnvironmentEntity(
-            api_version=api_version,
-            kind=kind,
-            name=name,
-            namespace=namespace,
-            definition=definition,
-        )
+    def create(self, **kwargs) -> EnvironmentEntity:
+        fields = ['api_version', 'kind', 'name', 'namespace', 'definition']
+        extracted = self.extract_kwargs(kwargs, fields)
+        entity = EnvironmentEntity(**extracted)
         self.db.add(entity)
         self.db.commit()
         self.db.refresh(entity)
         return entity
 
-    def update(self, api_version: str, kind: str, name: str, namespace: str, new_definition: dict = None):
-        entity = self.get_by(api_version, kind, name, namespace)
+    def update(self, **kwargs) -> Optional[EnvironmentEntity]:
+        fields = ['api_version', 'kind', 'name', 'namespace', 'new_definition']
+        extracted = self.extract_kwargs(kwargs, fields)
+        entity = self.get_by(**extracted)
         if not entity:
             return None
-        if new_definition is not None:
-            entity.definition = new_definition
+        if extracted.get('new_definition') is not None:
+            entity.definition = extracted['new_definition']
         self.db.commit()
         self.db.refresh(entity)
         return entity
 
-    def delete(self, entity: EnvironmentEntity):
+    def delete(self, entity: EnvironmentEntity) -> None:
         self.db.delete(entity)
         self.db.commit()
-
-    def list_all(self):
-        return self.db.query(EnvironmentEntity).all()
-
-
-class EnvironmentEntityLabelRepository:
-    def __init__(self, db: Session):
-        self.db = db
-
-    def get_by_id(self, label_id: int):
-        return self.db.query(EnvironmentEntityLabel).filter(EnvironmentEntityLabel.id == label_id).first()
-
-    def create(self, entity_id: int, name: str, value: str):
-        label = EnvironmentEntityLabel(
-            environment_entity_id=entity_id,
-            name=name,
-            value=value
-        )
-        self.db.add(label)
-        self.db.commit()
-        self.db.refresh(label)
-        return label
-
-    def list_all(self):
-        return self.db.query(EnvironmentEntityLabel).all()

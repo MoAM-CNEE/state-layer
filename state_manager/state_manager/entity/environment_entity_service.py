@@ -3,8 +3,8 @@ from typing import Dict, Any
 from sqlalchemy.orm.session import Session
 
 from state_manager.api.request_models import ControlPlaneApplyRQ, ControlPlaneDeleteRQ
-from state_manager.db.repositories.environment_entity_repository import EnvironmentEntityRepository, \
-    EnvironmentEntityLabelRepository
+from state_manager.db.repositories.environment_entity_label_repository import EnvironmentEntityLabelRepository
+from state_manager.db.repositories.environment_entity_repository import EnvironmentEntityRepository
 from state_manager.entity.entity_service import EntityService
 from state_manager.mirror_layer.mirror_manager_service import MirrorManagerService
 
@@ -30,9 +30,11 @@ class EnvironmentEntityService(EntityService):
         entities = self.environment_entity_repository.get_by_filter(filter_by)
         for entity in entities:
             # TODO: Apply lambdas
-            await self.mirror_manager_service.apply(ControlPlaneApplyRQ(change_id=0, entity_definition=entity.definition))
+            await self.mirror_manager_service.apply(
+                ControlPlaneApplyRQ(change_id=0, entity_definition=entity.definition))
             api_version, kind, name, namespace = self._get_entity_key(entity.definition)
-            self.environment_entity_repository.update(api_version, kind, name, namespace)
+            self.environment_entity_repository.update(api_version=api_version, kind=kind, name=name,
+                                                      namespace=namespace, new_definition=entity.definition)
 
     async def delete(self, change_id: int, filter_by: str) -> Dict[str, Any]:
         entities = self.environment_entity_repository.get_by_filter(filter_by)

@@ -37,7 +37,7 @@ Content-Type: application/json
 {
   "change_id": 0,
   "type": "ENVIRONMENT_ENTITY",
-  "filter_by": "where id > 1",
+  "filter_by": "select * from environment_entity where id > 1",
   "lambdas": {
   }
 }
