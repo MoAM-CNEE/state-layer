@@ -1,0 +1,57 @@
+POST http://localhost:8000/entity/create
+accept: application/json
+Content-Type: application/json
+
+{
+  "change_id": 0,
+  "type": "ENVIRONMENT_ENTITY",
+  "entity_definition": {
+    "apiVersion": "kubernetes.crossplane.io/v1alpha2",
+    "kind": "Object",
+    "metadata": {
+      "name": "entity-test"
+    },
+    "spec": {
+      "forProvider": {
+        "manifest": {
+          "apiVersion": "v1",
+          "kind": "Namespace",
+          "metadata": {
+            "name": "entity-test"
+          }
+        }
+      },
+      "providerConfigRef": {
+        "name": "provider-config-kubernetes"
+      }
+    }
+  }
+}
+
+###
+
+PUT http://localhost:8000/entity/update
+accept: application/json
+Content-Type: application/json
+
+{
+  "change_id": 0,
+  "type": "ENVIRONMENT_ENTITY",
+  "filter_by": "where id > 1",
+  "lambdas": {
+  }
+}
+
+###
+
+DELETE http://localhost:8000/entity/delete
+accept: application/json
+Content-Type: application/json
+
+{
+  "change_id": 0,
+  "type": "ENVIRONMENT_ENTITY",
+  "filter_by": "select * from environment_entity where id > 1"
+}
+
+###

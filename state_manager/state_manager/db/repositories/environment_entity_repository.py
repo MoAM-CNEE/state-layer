@@ -1,5 +1,10 @@
+import json
+
+from sqlalchemy import text
 from sqlalchemy.orm import Session
+
 from state_manager.db.models import EnvironmentEntity, EnvironmentEntityLabel
+
 
 class EnvironmentEntityRepository:
     def __init__(self, db: Session):
@@ -15,6 +20,19 @@ class EnvironmentEntityRepository:
             EnvironmentEntity.name == name,
             EnvironmentEntity.namespace == namespace
         ).first()
+
+    # TODO: Sanitize the query
+    def get_by_filter(self, filter_by: str):
+        result = self.db.execute(text(filter_by)).fetchall()
+        environment_entities = []
+        for row in result:
+            row_dict = dict(zip(['id', 'api_version', 'kind', 'name', 'namespace', 'definition'], row))
+            row_dict['definition'] = json.loads(row_dict['definition'])
+            entity = EnvironmentEntity(**row_dict)
+            merged_entity = self.db.merge(entity)
+            environment_entities.append(merged_entity)
+        self.db.commit()
+        return environment_entities
 
     def create(self, api_version: str, kind: str, name: str, namespace: str, definition: dict):
         entity = EnvironmentEntity(
@@ -39,13 +57,9 @@ class EnvironmentEntityRepository:
         self.db.refresh(entity)
         return entity
 
-    def delete(self, api_version: str, kind: str, name: str, namespace: str):
-        entity = self.get_by(api_version, kind, name, namespace)
-        if not entity:
-            return False
+    def delete(self, entity: EnvironmentEntity):
         self.db.delete(entity)
         self.db.commit()
-        return True
 
     def list_all(self):
         return self.db.query(EnvironmentEntity).all()
