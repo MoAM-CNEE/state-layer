@@ -39,6 +39,7 @@ Content-Type: application/json
   "type": "ENVIRONMENT_ENTITY",
   "filter_by": "select * from environment_entity where id > 1",
   "lambdas": {
+    ".spec.forProvider.manifest.metadata.name": "\"entity-test-full\""
   }
 }
 

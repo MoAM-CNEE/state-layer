@@ -18,6 +18,7 @@ class EnvironmentEntityRepository(Repository):
         environment_entities = []
         for row in result:
             row_dict = dict(zip(['id', 'api_version', 'kind', 'name', 'namespace', 'definition'], row))
+            row_dict['id'] = int(row_dict['id'])
             row_dict['definition'] = json.loads(row_dict['definition'])
             entity = EnvironmentEntity(**row_dict)
             merged_entity = self.db.merge(entity)

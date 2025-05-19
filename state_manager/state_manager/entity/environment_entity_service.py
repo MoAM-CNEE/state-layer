@@ -1,5 +1,6 @@
 from typing import Dict, Any
 
+import jq
 from sqlalchemy.orm.session import Session
 
 from state_manager.api.request_models import ControlPlaneApplyRQ, ControlPlaneDeleteRQ
@@ -16,7 +17,8 @@ class EnvironmentEntityService(EntityService):
         self.environment_entity_label_repository = EnvironmentEntityLabelRepository(db)
 
     async def create(self, change_id: int, entity_definition: Dict[str, Any]) -> Dict[str, Any]:
-        await self.mirror_manager_service.apply(ControlPlaneApplyRQ(change_id=0, entity_definition=entity_definition))
+        await self.mirror_manager_service.apply(
+            ControlPlaneApplyRQ(change_id=change_id, entity_definition=entity_definition))
         api_version, kind, name, namespace = self._get_entity_key(entity_definition)
         self.environment_entity_repository.create(
             api_version=api_version,
@@ -28,19 +30,39 @@ class EnvironmentEntityService(EntityService):
 
     async def update(self, change_id: int, filter_by: str, lambdas: Dict[str, str]) -> Dict[str, Any]:
         entities = self.environment_entity_repository.get_by_filter(filter_by)
+        print(f"Found {len(entities)} entities to update with {len(lambdas)} lambdas")
         for entity in entities:
-            # TODO: Apply lambdas
+            for field, right_side in lambdas.items():
+                original_value = self._get_value_from_dict_by_jq_key(entity.definition, field)
+                jq_expression = f"{field} |= {right_side}"
+                try:
+                    updated_definition = jq.compile(jq_expression).input(entity.definition).first()
+                    if updated_definition:
+                        entity.definition = updated_definition
+                        updated_value = self._get_value_from_dict_by_jq_key(entity.definition, field)
+                        print(
+                            f"Updated field '{field}' from '{original_value}' to '{updated_value}' with jq expression '{jq_expression}'")
+                    else:
+                        print(f"No result returned for jq expression '{jq_expression}'")
+                except Exception as e:
+                    print(f"Error applying jq expression '{jq_expression}' on field '{field}': {e}")
             await self.mirror_manager_service.apply(
-                ControlPlaneApplyRQ(change_id=0, entity_definition=entity.definition))
+                ControlPlaneApplyRQ(change_id=change_id, entity_definition=entity.definition)
+            )
             api_version, kind, name, namespace = self._get_entity_key(entity.definition)
-            self.environment_entity_repository.update(api_version=api_version, kind=kind, name=name,
-                                                      namespace=namespace, new_definition=entity.definition)
+            self.environment_entity_repository.update(
+                api_version=api_version,
+                kind=kind,
+                name=name,
+                namespace=namespace,
+                new_definition=entity.definition
+            )
 
     async def delete(self, change_id: int, filter_by: str) -> Dict[str, Any]:
         entities = self.environment_entity_repository.get_by_filter(filter_by)
         for entity in entities:
             await self.mirror_manager_service.delete(
-                ControlPlaneDeleteRQ(change_id=0, api_version=entity.api_version, kind=entity.kind,
+                ControlPlaneDeleteRQ(change_id=change_id, api_version=entity.api_version, kind=entity.kind,
                                      name=entity.name, namespace=entity.namespace))
             self.environment_entity_repository.delete(entity)
 
@@ -48,3 +70,14 @@ class EnvironmentEntityService(EntityService):
         entity_metadata = entity_definition.get('metadata')
         return (entity_definition.get('apiVersion'), entity_definition.get('kind'), entity_metadata.get('name', ''),
                 entity_metadata.get('namespace', ''))
+
+    def _get_value_from_dict_by_jq_key(self, _dict: dict, jq_key: str) -> str:
+        keys = jq_key[1:].split(".")  # Omit leading .
+        target = _dict
+        for key in keys[:-1]:
+            if key not in target:
+                target[key] = {}
+            target = target[key]
+        last_key = keys[-1]
+        value = target.get(last_key)
+        return value

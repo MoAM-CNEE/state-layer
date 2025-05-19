@@ -46,7 +46,7 @@ class EnvironmentEntity(Base):
 
     def __repr__(self):
         return (f"<EnvironmentEntity(id={self.id}, api_version='{self.api_version}', "
-                f"kind='{self.kind}', name='{self.name}', namespace='{self.namespace}')>")
+                f"kind='{self.kind}', name='{self.name}', namespace='{self.namespace}', definition={self.definition})>")
 
 
 class EnvironmentEntityLabel(Base):
