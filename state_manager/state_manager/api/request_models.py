@@ -4,12 +4,12 @@ from pydantic import BaseModel
 from typing import Dict, Any, Optional
 
 
-class ControlPlaneApplyRQ(BaseModel):
+class ApplyOnControlPlaneRQ(BaseModel):
     change_id: int
     entity_definition: Dict[str, Any]
 
 
-class ControlPlaneDeleteRQ(BaseModel):
+class DeleteFromControlPlaneRQ(BaseModel):
     change_id: int
     api_version: str
     kind: str
@@ -23,20 +23,20 @@ class EntityType(str, Enum):
     ENVIRONMENT_ENTITY = "ENVIRONMENT_ENTITY"
 
 
-class EntityCreateActionRQ(BaseModel):
+class CreateEntityActionRQ(BaseModel):
     change_id: int
     type: EntityType
     entity_definition: Dict[str, Any]
 
 
-class EntityUpdateActionRQ(BaseModel):
+class UpdateEntityActionRQ(BaseModel):
     change_id: int
     type: EntityType
     filter_by: str
     lambdas: Dict[str, str]
 
 
-class EntityDeleteActionRQ(BaseModel):
+class DeleteEntityActionRQ(BaseModel):
     change_id: int
     type: EntityType
     filter_by: str

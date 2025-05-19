@@ -3,7 +3,7 @@ from typing import Dict, Any
 import jq
 from sqlalchemy.orm.session import Session
 
-from state_manager.api.request_models import ControlPlaneApplyRQ, ControlPlaneDeleteRQ
+from state_manager.api.request_models import ApplyOnControlPlaneRQ, DeleteFromControlPlaneRQ
 from state_manager.db.repositories.environment_entity_label_repository import EnvironmentEntityLabelRepository
 from state_manager.db.repositories.environment_entity_repository import EnvironmentEntityRepository
 from state_manager.entity.entity_service import EntityService
@@ -18,7 +18,7 @@ class EnvironmentEntityService(EntityService):
 
     async def create(self, change_id: int, entity_definition: Dict[str, Any]) -> Dict[str, Any]:
         await self.mirror_manager_service.apply(
-            ControlPlaneApplyRQ(change_id=change_id, entity_definition=entity_definition))
+            ApplyOnControlPlaneRQ(change_id=change_id, entity_definition=entity_definition))
         api_version, kind, name, namespace = self._get_entity_key(entity_definition)
         self.environment_entity_repository.create(
             api_version=api_version,
@@ -47,7 +47,7 @@ class EnvironmentEntityService(EntityService):
                 except Exception as e:
                     print(f"Error applying jq expression '{jq_expression}' on field '{field}': {e}")
             await self.mirror_manager_service.apply(
-                ControlPlaneApplyRQ(change_id=change_id, entity_definition=entity.definition)
+                ApplyOnControlPlaneRQ(change_id=change_id, entity_definition=entity.definition)
             )
             api_version, kind, name, namespace = self._get_entity_key(entity.definition)
             self.environment_entity_repository.update(
@@ -62,7 +62,7 @@ class EnvironmentEntityService(EntityService):
         entities = self.environment_entity_repository.get_by_filter(filter_by)
         for entity in entities:
             await self.mirror_manager_service.delete(
-                ControlPlaneDeleteRQ(change_id=change_id, api_version=entity.api_version, kind=entity.kind,
+                DeleteFromControlPlaneRQ(change_id=change_id, api_version=entity.api_version, kind=entity.kind,
                                      name=entity.name, namespace=entity.namespace))
             self.environment_entity_repository.delete(entity)
 

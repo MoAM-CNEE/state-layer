@@ -1,12 +1,12 @@
 from pydantic import BaseModel
 
 
-class ControlPlaneApplyRS(BaseModel):
+class ApplyOnControlPlaneRS(BaseModel):
     change_id: int
     updated: bool
 
 
-class ControlPlaneDeleteRS(BaseModel):
+class DeleteFromControlPlaneRS(BaseModel):
     change_id: int
 
 
