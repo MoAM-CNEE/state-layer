@@ -1,6 +1,7 @@
 from sqlalchemy import Column, BigInteger, String, Text, JSON, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql.schema import UniqueConstraint
 
 Base = declarative_base()
 
@@ -8,7 +9,7 @@ Base = declarative_base()
 class Rule(Base):
     __tablename__ = 'rule'
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     _condition = Column(String(8192), unique=True, nullable=False)
     _action = Column(Text, nullable=True)
 
@@ -19,7 +20,7 @@ class Rule(Base):
 class Metric(Base):
     __tablename__ = "metric"
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     name = Column(String(1024), unique=True, nullable=False)
     query = Column(String(8192), nullable=False)
 
@@ -30,29 +31,35 @@ class Metric(Base):
 class EnvironmentEntity(Base):
     __tablename__ = "environment_entity"
 
-    id = Column(BigInteger, primary_key=True)
-    name = Column(String(1024), nullable=False)
-    namespace = Column(String(1024), nullable=False)
-    definition = Column(JSON)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    api_version = Column(String(255), nullable=False)
+    kind = Column(String(255), nullable=False)
+    name = Column(String(253), nullable=False)
+    namespace = Column(String(63), nullable=False)
+    definition = Column(JSON, nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint('api_version', 'kind', 'name', 'namespace', name='unique_environment_entity_name'),
+    )
 
     labels = relationship("EnvironmentEntityLabel", back_populates="entity", cascade="all, delete-orphan")
 
-    __table_args__ = (
-        # unique constraint on name and namespace
-        {'sqlite_autoincrement': True},  # for SQLite if testing
-    )
-
     def __repr__(self):
-        return f"<EnvironmentEntity(id={self.id}, name={self.name}, namespace={self.namespace})>"
+        return (f"<EnvironmentEntity(id={self.id}, api_version='{self.api_version}', "
+                f"kind='{self.kind}', name='{self.name}', namespace='{self.namespace}', definition={self.definition})>")
 
 
 class EnvironmentEntityLabel(Base):
     __tablename__ = "environment_entity_label"
 
-    id = Column(BigInteger, primary_key=True)
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
     environment_entity_id = Column(BigInteger, ForeignKey("environment_entity.id"), nullable=False)
     name = Column(String(255), nullable=False)
-    value = Column(String(255))
+    value = Column(String(255), nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint('environment_entity_id', 'name', name='unique_entity_label_name'),
+    )
 
     entity = relationship("EnvironmentEntity", back_populates="labels")
 
