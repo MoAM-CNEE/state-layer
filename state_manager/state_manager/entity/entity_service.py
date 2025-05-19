@@ -10,8 +10,10 @@ class EntityService(ABC):
         self.db = db
         self.mirror_manager_service = mirror_manager_service
 
+    # TODO: Use kwargs for abstract methods OR don't use a common abstract class
+
     @abstractmethod
-    async def create(self, change_id: int, entity_definition: Dict[str, Any]) -> Dict[str, Any]:
+    async def create(self, change_id: int, definition: Dict[str, Any]) -> Dict[str, Any]:
         pass
 
     @abstractmethod

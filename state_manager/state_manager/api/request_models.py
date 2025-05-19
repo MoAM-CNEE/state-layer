@@ -26,7 +26,7 @@ class EntityType(str, Enum):
 class CreateEntityActionRQ(BaseModel):
     change_id: int
     type: EntityType
-    entity_definition: Dict[str, Any]
+    definition: Dict[str, Any]
 
 
 class UpdateEntityActionRQ(BaseModel):

@@ -16,16 +16,16 @@ class EnvironmentEntityService(EntityService):
         self.environment_entity_repository = EnvironmentEntityRepository(db)
         self.environment_entity_label_repository = EnvironmentEntityLabelRepository(db)
 
-    async def create(self, change_id: int, entity_definition: Dict[str, Any]) -> Dict[str, Any]:
+    async def create(self, change_id: int, definition: Dict[str, Any]) -> Dict[str, Any]:
         await self.mirror_manager_service.apply(
-            ApplyOnControlPlaneRQ(change_id=change_id, entity_definition=entity_definition))
-        api_version, kind, name, namespace = self._get_entity_key(entity_definition)
+            ApplyOnControlPlaneRQ(change_id=change_id, entity_definition=definition))
+        api_version, kind, name, namespace = self._get_entity_key(definition)
         self.environment_entity_repository.create(
             api_version=api_version,
             kind=kind,
             name=name,
             namespace=namespace,
-            definition=entity_definition,
+            definition=definition,
         )
 
     async def update(self, change_id: int, filter_by: str, lambdas: Dict[str, str]) -> Dict[str, Any]:
@@ -66,10 +66,10 @@ class EnvironmentEntityService(EntityService):
                                      name=entity.name, namespace=entity.namespace))
             self.environment_entity_repository.delete(entity)
 
-    def _get_entity_key(self, entity_definition: Dict[str, Any]) -> tuple[str, str, str, str]:
-        entity_metadata = entity_definition.get('metadata')
-        return (entity_definition.get('apiVersion'), entity_definition.get('kind'), entity_metadata.get('name', ''),
-                entity_metadata.get('namespace', ''))
+    def _get_entity_key(self, definition: Dict[str, Any]) -> tuple[str, str, str, str]:
+        metadata = definition.get('metadata')
+        return (definition.get('apiVersion'), definition.get('kind'), metadata.get('name', ''),
+                metadata.get('namespace', ''))
 
     def _get_value_from_dict_by_jq_key(self, _dict: dict, jq_key: str) -> str:
         keys = jq_key[1:].split(".")  # Omit leading .

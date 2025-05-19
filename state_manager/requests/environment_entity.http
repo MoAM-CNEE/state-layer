@@ -5,7 +5,7 @@ Content-Type: application/json
 {
   "change_id": 0,
   "type": "ENVIRONMENT_ENTITY",
-  "entity_definition": {
+  "definition": {
     "apiVersion": "kubernetes.crossplane.io/v1alpha2",
     "kind": "Object",
     "metadata": {

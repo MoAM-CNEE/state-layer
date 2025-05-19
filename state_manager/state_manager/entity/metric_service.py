@@ -12,7 +12,7 @@ class MetricService(EntityService):
         super().__init__(db, mirror_manager_service)
         self.metric = MetricRepository(db)
 
-    async def create(self, change_id: int, entity_definition: Dict[str, Any]) -> Dict[str, Any]:
+    async def create(self, change_id: int, definition: Dict[str, Any]) -> Dict[str, Any]:
         raise NotImplementedError()
 
     async def update(self, change_id: int, filter_by: str, lambdas: Dict[str, str]) -> Dict[str, Any]:

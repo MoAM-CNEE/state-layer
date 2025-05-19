@@ -31,7 +31,7 @@ def get_entity_service_factory(db: Session = Depends(get_db), mirror_manager_ser
 @app.post("/entity/create")
 async def create_entity(rq: CreateEntityActionRQ,
                         entity_service_factory: EntityServiceFactory = Depends(get_entity_service_factory)):
-    return await entity_service_factory.get(rq.type).create(rq.change_id, rq.entity_definition)
+    return await entity_service_factory.get(rq.type).create(rq.change_id, rq.definition)
 
 
 @app.put("/entity/update")
