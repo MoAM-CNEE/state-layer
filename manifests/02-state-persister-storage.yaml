@@ -1,0 +1,22 @@
+#apiVersion: storage.k8s.io/v1
+#kind: StorageClass
+#metadata:
+#  name: cinder-n-standard
+#provisioner: cinder.csi.openstack.org
+#parameters:
+#  type: n.standard
+#reclaimPolicy: Delete
+#volumeBindingMode: Immediate
+#---
+#apiVersion: v1
+#kind: PersistentVolumeClaim
+#metadata:
+#  name: state-persister-pvc
+#  namespace: state-layer
+#spec:
+#  storageClassName: cinder-n-standard
+#  accessModes:
+#    - ReadWriteOnce
+#  resources:
+#    requests:
+#      storage: 4Gi
