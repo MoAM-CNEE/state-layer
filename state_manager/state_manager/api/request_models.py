@@ -31,3 +31,7 @@ class UpdateEntityActionRQ(BaseModel):
 class DeleteEntityActionRQ(BaseModel):
     change_id: int
     query: str
+
+
+class ReadEntityActionRQ(BaseModel):
+    query: str

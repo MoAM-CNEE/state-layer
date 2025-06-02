@@ -5,6 +5,7 @@ import jq
 from sqlalchemy.orm import Session
 
 from state_manager.api.request_models import ApplyOnControlPlaneRQ, DeleteFromControlPlaneRQ
+from state_manager.db.models import Entity
 from state_manager.db.repositories.entity_label_repository import EntityLabelRepository
 from state_manager.db.repositories.entity_repository import EntityRepository
 from state_manager.mirror_layer.mirror_manager_service import MirrorManagerService
@@ -29,7 +30,7 @@ class EntityService:
         )
 
     async def update(self, change_id: int, query: str, lambdas: Dict[str, str]) -> Dict[str, Any]:
-        entities = self.entity_repository.get_by_filter(query)
+        entities = self.entity_repository.get_by_query(query)
         print(f"Found {len(entities)} entities to update with {len(lambdas)} lambdas")
         for entity in entities:
             for field, right_side in lambdas.items():
@@ -59,7 +60,7 @@ class EntityService:
             )
 
     async def delete(self, change_id: int, query: str) -> Dict[str, Any]:
-        entities = self.entity_repository.get_by_filter(query)
+        entities = self.entity_repository.get_by_query(query)
         for entity in entities:
             await self.mirror_manager_service.delete(
                 DeleteFromControlPlaneRQ(change_id=change_id, api_version=entity.api_version, kind=entity.kind,
@@ -81,3 +82,6 @@ class EntityService:
         last_key = keys[-1]
         value = target.get(last_key)
         return value
+
+    async def read(self, query: str) -> list[Entity]:
+        return self.entity_repository.get_by_query(query)

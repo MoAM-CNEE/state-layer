@@ -1,7 +1,9 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 
-from state_manager.api.request_models import CreateEntityActionRQ, UpdateEntityActionRQ, DeleteEntityActionRQ
+from state_manager.api.request_models import CreateEntityActionRQ, UpdateEntityActionRQ, DeleteEntityActionRQ, \
+    ReadEntityActionRQ
+from state_manager.api.response_models import ReadEntityActionRS, EntityDTO
 from state_manager.db.session import DatabaseSessionManager
 from state_manager.entity.entity_service import EntityService
 from state_manager.mirror_layer.mirror_manager_service import MirrorManagerService
@@ -44,3 +46,10 @@ async def update_entity(rq: UpdateEntityActionRQ,
 async def delete_entity(rq: DeleteEntityActionRQ,
                         entity_service: EntityService = Depends(get_entity_service)):
     return await entity_service.delete(rq.change_id, rq.query)
+
+
+@app.get("/entity/read", response_model=ReadEntityActionRS)
+async def read_entity(rq: ReadEntityActionRQ,
+                      entity_service: EntityService = Depends(get_entity_service)):
+    entities = await entity_service.read(rq.query)
+    return ReadEntityActionRS(entities=[EntityDTO.model_validate(e) for e in entities])

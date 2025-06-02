@@ -53,3 +53,11 @@ Content-Type: application/json
 }
 
 ###
+
+GET http://localhost:8000/entity/read
+accept: application/json
+Content-Type: application/json
+
+{
+  "query": "select * from entity where definition->'$.metadata.name' = 'entity-test'"
+}

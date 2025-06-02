@@ -8,16 +8,16 @@ from state_manager.db.repositories.repository import Repository
 
 
 class EntityRepository(Repository):
-    def get_by(self, **kwargs) -> Optional[Entity]:
+    def get_by_key(self, **kwargs) -> Optional[Entity]:
         fields = ['api_version', 'kind', 'name', 'namespace']
         filters = self.extract_kwargs(kwargs, fields)
         return self.db.query(Entity).query(**filters).first()
 
-    def get_by_filter(self, query: str) -> List[Entity]:
+    def get_by_query(self, query: str) -> List[Entity]:
         result = self.db.execute(text(query)).fetchall()
         environment_entities = []
         for row in result:
-            row_dict = dict(zip(['id', 'api_version', 'kind', 'name', 'namespace', 'definition'], row))
+            row_dict = dict(row._mapping)
             row_dict['id'] = int(row_dict['id'])
             row_dict['definition'] = json.loads(row_dict['definition'])
             entity = Entity(**row_dict)
@@ -38,7 +38,7 @@ class EntityRepository(Repository):
     def update(self, **kwargs) -> Optional[Entity]:
         fields = ['api_version', 'kind', 'name', 'namespace', 'new_definition']
         extracted = self.extract_kwargs(kwargs, fields)
-        entity = self.get_by(**extracted)
+        entity = self.get_by_key(**extracted)
         if not entity:
             return None
         if extracted.get('new_definition') is not None:
