@@ -11,10 +11,10 @@ class EntityRepository(Repository):
     def get_by(self, **kwargs) -> Optional[Entity]:
         fields = ['api_version', 'kind', 'name', 'namespace']
         filters = self.extract_kwargs(kwargs, fields)
-        return self.db.query(Entity).filter_by(**filters).first()
+        return self.db.query(Entity).query(**filters).first()
 
-    def get_by_filter(self, filter_by: str) -> List[Entity]:
-        result = self.db.execute(text(filter_by)).fetchall()
+    def get_by_filter(self, query: str) -> List[Entity]:
+        result = self.db.execute(text(query)).fetchall()
         environment_entities = []
         for row in result:
             row_dict = dict(zip(['id', 'api_version', 'kind', 'name', 'namespace', 'definition'], row))

@@ -37,10 +37,10 @@ async def create_entity(rq: CreateEntityActionRQ,
 @app.put("/entity/update")
 async def update_entity(rq: UpdateEntityActionRQ,
                         entity_service: EntityService = Depends(get_entity_service)):
-    return await entity_service.update(rq.change_id, rq.filter_by, rq.lambdas)
+    return await entity_service.update(rq.change_id, rq.query, rq.lambdas)
 
 
 @app.delete("/entity/delete")
 async def delete_entity(rq: DeleteEntityActionRQ,
                         entity_service: EntityService = Depends(get_entity_service)):
-    return await entity_service.delete(rq.change_id, rq.filter_by)
+    return await entity_service.delete(rq.change_id, rq.query)

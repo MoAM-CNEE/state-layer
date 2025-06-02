@@ -13,7 +13,7 @@ class Repository(ABC):
         pass
 
     @abstractmethod
-    def get_by_filter(self, filter_by: str) -> List[object]:
+    def get_by_filter(self, query: str) -> List[object]:
         pass
 
     @abstractmethod

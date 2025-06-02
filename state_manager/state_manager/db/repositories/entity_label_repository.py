@@ -12,8 +12,8 @@ class EntityLabelRepository(Repository):
         label_id = extracted.get('label_id')
         return self.db.query(EntityLabel).filter(EntityLabel.id == label_id).first()
 
-    def get_by_filter(self, filter_by: str) -> List[EntityLabel]:
-        result = self.db.execute(text(filter_by)).fetchall()
+    def get_by_filter(self, query: str) -> List[EntityLabel]:
+        result = self.db.execute(text(query)).fetchall()
         environment_labels = []
         for row in result:
             label = EntityLabel(id=row[0], entity_id=row[1], name=row[2], value=row[3])

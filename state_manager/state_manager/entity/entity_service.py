@@ -28,8 +28,8 @@ class EntityService:
             definition=definition,
         )
 
-    async def update(self, change_id: int, filter_by: str, lambdas: Dict[str, str]) -> Dict[str, Any]:
-        entities = self.entity_repository.get_by_filter(filter_by)
+    async def update(self, change_id: int, query: str, lambdas: Dict[str, str]) -> Dict[str, Any]:
+        entities = self.entity_repository.get_by_filter(query)
         print(f"Found {len(entities)} entities to update with {len(lambdas)} lambdas")
         for entity in entities:
             for field, right_side in lambdas.items():
@@ -58,8 +58,8 @@ class EntityService:
                 new_definition=entity.definition
             )
 
-    async def delete(self, change_id: int, filter_by: str) -> Dict[str, Any]:
-        entities = self.entity_repository.get_by_filter(filter_by)
+    async def delete(self, change_id: int, query: str) -> Dict[str, Any]:
+        entities = self.entity_repository.get_by_filter(query)
         for entity in entities:
             await self.mirror_manager_service.delete(
                 DeleteFromControlPlaneRQ(change_id=change_id, api_version=entity.api_version, kind=entity.kind,

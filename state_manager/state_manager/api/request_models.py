@@ -24,10 +24,10 @@ class CreateEntityActionRQ(BaseModel):
 
 class UpdateEntityActionRQ(BaseModel):
     change_id: int
-    filter_by: str
+    query: str
     lambdas: Dict[str, str]
 
 
 class DeleteEntityActionRQ(BaseModel):
     change_id: int
-    filter_by: str
+    query: str
