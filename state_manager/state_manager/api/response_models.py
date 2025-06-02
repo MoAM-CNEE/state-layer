@@ -1,6 +1,6 @@
-from typing import Any
+from pydantic import BaseModel
 
-from pydantic import BaseModel, ConfigDict
+from state_manager.dto.entity import EntityDTO
 
 
 class ApplyOnControlPlaneRS(BaseModel):
@@ -10,17 +10,6 @@ class ApplyOnControlPlaneRS(BaseModel):
 
 class DeleteFromControlPlaneRS(BaseModel):
     change_id: int
-
-
-class EntityDTO(BaseModel):
-    id: int
-    api_version: str
-    kind: str
-    name: str
-    namespace: str
-    definition: dict[str, Any]
-
-    model_config = ConfigDict(from_attributes=True)
 
 
 class ReadEntityActionRS(BaseModel):
