@@ -20,17 +20,20 @@ class DeleteFromControlPlaneRQ(BaseModel):
 class CreateEntityActionRQ(BaseModel):
     change_id: int
     definition: Dict[str, Any]
+    trigger_mirror_manager: Optional[bool] = True
 
 
 class UpdateEntityActionRQ(BaseModel):
     change_id: int
     query: str
     lambdas: Dict[str, str]
+    trigger_mirror_manager: Optional[bool] = True
 
 
 class DeleteEntityActionRQ(BaseModel):
     change_id: int
     query: str
+    trigger_mirror_manager: Optional[bool] = True
 
 
 class ReadEntityActionRQ(BaseModel):

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 import jq
 from sqlalchemy.orm import Session
@@ -17,9 +17,10 @@ class EntityService:
         self.entity_repository = EntityRepository(db)
         self.entity_label_repository = EntityLabelRepository(db)
 
-    async def create(self, change_id: int, definition: Dict[str, Any]) -> Dict[str, Any]:
-        await self.mirror_manager_service.apply(
-            ApplyOnControlPlaneRQ(change_id=change_id, entity_definition=definition))
+    async def create(self, change_id: int, definition: Dict[str, Any], trigger_mirror_manager: Optional[bool]) -> Dict[str, Any]:
+        if trigger_mirror_manager:
+            await self.mirror_manager_service.apply(
+                ApplyOnControlPlaneRQ(change_id=change_id, entity_definition=definition))
         api_version, kind, name, namespace = self._get_entity_key(definition)
         self.entity_repository.create(
             api_version=api_version,
@@ -29,7 +30,7 @@ class EntityService:
             definition=definition,
         )
 
-    async def update(self, change_id: int, query: str, lambdas: Dict[str, str]) -> Dict[str, Any]:
+    async def update(self, change_id: int, query: str, lambdas: Dict[str, str], trigger_mirror_manager: Optional[bool]) -> Dict[str, Any]:
         entities = self.entity_repository.get_by_query(query)
         print(f"Found {len(entities)} entities to update with {len(lambdas)} lambdas")
         for entity in entities:
@@ -47,9 +48,10 @@ class EntityService:
                         print(f"No result returned for jq expression '{jq_expression}'")
                 except Exception as e:
                     print(f"Error applying jq expression '{jq_expression}' on field '{field}': {e}")
-            await self.mirror_manager_service.apply(
-                ApplyOnControlPlaneRQ(change_id=change_id, entity_definition=entity.definition)
-            )
+            if trigger_mirror_manager:
+                await self.mirror_manager_service.apply(
+                    ApplyOnControlPlaneRQ(change_id=change_id, entity_definition=entity.definition)
+                )
             api_version, kind, name, namespace = self._get_entity_key(entity.definition)
             self.entity_repository.update(
                 api_version=api_version,
@@ -59,13 +61,17 @@ class EntityService:
                 new_definition=entity.definition
             )
 
-    async def delete(self, change_id: int, query: str) -> Dict[str, Any]:
+    async def delete(self, change_id: int, query: str, trigger_mirror_manager: Optional[bool]) -> Dict[str, Any]:
         entities = self.entity_repository.get_by_query(query)
         for entity in entities:
-            await self.mirror_manager_service.delete(
-                DeleteFromControlPlaneRQ(change_id=change_id, api_version=entity.api_version, kind=entity.kind,
-                                     name=entity.name, namespace=entity.namespace))
+            if trigger_mirror_manager:
+                await self.mirror_manager_service.delete(
+                    DeleteFromControlPlaneRQ(change_id=change_id, api_version=entity.api_version, kind=entity.kind,
+                                         name=entity.name, namespace=entity.namespace))
             self.entity_repository.delete(entity)
+
+    async def read(self, query: str) -> list[Entity]:
+        return self.entity_repository.get_by_query(query)
 
     def _get_entity_key(self, definition: Dict[str, Any]) -> tuple[str, str, str, str]:
         metadata = definition.get('metadata')
@@ -82,6 +88,3 @@ class EntityService:
         last_key = keys[-1]
         value = target.get(last_key)
         return value
-
-    async def read(self, query: str) -> list[Entity]:
-        return self.entity_repository.get_by_query(query)
