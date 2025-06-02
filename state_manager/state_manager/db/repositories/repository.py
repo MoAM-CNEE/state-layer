@@ -9,11 +9,11 @@ class Repository(ABC):
         self.db = db
 
     @abstractmethod
-    def get_by(self, **kwargs) -> Optional[object]:
+    def get_by_key(self, **kwargs) -> Optional[object]:
         pass
 
     @abstractmethod
-    def get_by_filter(self, filter_by: str) -> List[object]:
+    def get_by_query(self, query: str) -> List[object]:
         pass
 
     @abstractmethod

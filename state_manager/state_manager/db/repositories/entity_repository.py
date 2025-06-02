@@ -3,42 +3,42 @@ from typing import List, Optional
 
 from sqlalchemy import text
 
-from state_manager.db.models import EnvironmentEntity
+from state_manager.db.models import Entity
 from state_manager.db.repositories.repository import Repository
 
 
-class EnvironmentEntityRepository(Repository):
-    def get_by(self, **kwargs) -> Optional[EnvironmentEntity]:
+class EntityRepository(Repository):
+    def get_by_key(self, **kwargs) -> Optional[Entity]:
         fields = ['api_version', 'kind', 'name', 'namespace']
         filters = self.extract_kwargs(kwargs, fields)
-        return self.db.query(EnvironmentEntity).filter_by(**filters).first()
+        return self.db.query(Entity).filter_by(**filters).first()
 
-    def get_by_filter(self, filter_by: str) -> List[EnvironmentEntity]:
-        result = self.db.execute(text(filter_by)).fetchall()
+    def get_by_query(self, query: str) -> List[Entity]:
+        result = self.db.execute(text(query)).fetchall()
         environment_entities = []
         for row in result:
-            row_dict = dict(zip(['id', 'api_version', 'kind', 'name', 'namespace', 'definition'], row))
+            row_dict = dict(row._mapping)
             row_dict['id'] = int(row_dict['id'])
             row_dict['definition'] = json.loads(row_dict['definition'])
-            entity = EnvironmentEntity(**row_dict)
+            entity = Entity(**row_dict)
             merged_entity = self.db.merge(entity)
             environment_entities.append(merged_entity)
         self.db.commit()
         return environment_entities
 
-    def create(self, **kwargs) -> EnvironmentEntity:
+    def create(self, **kwargs) -> Entity:
         fields = ['api_version', 'kind', 'name', 'namespace', 'definition']
         extracted = self.extract_kwargs(kwargs, fields)
-        entity = EnvironmentEntity(**extracted)
+        entity = Entity(**extracted)
         self.db.add(entity)
         self.db.commit()
         self.db.refresh(entity)
         return entity
 
-    def update(self, **kwargs) -> Optional[EnvironmentEntity]:
+    def update(self, **kwargs) -> Optional[Entity]:
         fields = ['api_version', 'kind', 'name', 'namespace', 'new_definition']
         extracted = self.extract_kwargs(kwargs, fields)
-        entity = self.get_by(**extracted)
+        entity = self.get_by_key(**extracted)
         if not entity:
             return None
         if extracted.get('new_definition') is not None:
@@ -47,6 +47,6 @@ class EnvironmentEntityRepository(Repository):
         self.db.refresh(entity)
         return entity
 
-    def delete(self, entity: EnvironmentEntity) -> None:
+    def delete(self, entity: Entity) -> None:
         self.db.delete(entity)
         self.db.commit()

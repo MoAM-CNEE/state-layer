@@ -2,28 +2,28 @@ from typing import List, Optional
 
 from sqlalchemy import text
 
-from state_manager.db.models import EnvironmentEntityLabel
+from state_manager.db.models import EntityLabel
 from state_manager.db.repositories.repository import Repository
 
 
-class EnvironmentEntityLabelRepository(Repository):
-    def get_by(self, **kwargs) -> Optional[EnvironmentEntityLabel]:
+class EntityLabelRepository(Repository):
+    def get_by_key(self, **kwargs) -> Optional[EntityLabel]:
         extracted = self.extract_kwargs(kwargs, ['label_id'])
         label_id = extracted.get('label_id')
-        return self.db.query(EnvironmentEntityLabel).filter(EnvironmentEntityLabel.id == label_id).first()
+        return self.db.query(EntityLabel).filter(EntityLabel.id == label_id).first()
 
-    def get_by_filter(self, filter_by: str) -> List[EnvironmentEntityLabel]:
-        result = self.db.execute(text(filter_by)).fetchall()
+    def get_by_query(self, query: str) -> List[EntityLabel]:
+        result = self.db.execute(text(query)).fetchall()
         environment_labels = []
         for row in result:
-            label = EnvironmentEntityLabel(id=row[0], environment_entity_id=row[1], name=row[2], value=row[3])
+            label = EntityLabel(id=row[0], entity_id=row[1], name=row[2], value=row[3])
             environment_labels.append(label)
         return environment_labels
 
-    def create(self, **kwargs) -> EnvironmentEntityLabel:
+    def create(self, **kwargs) -> EntityLabel:
         extracted = self.extract_kwargs(kwargs, ['entity_id', 'name', 'value'])
-        label = EnvironmentEntityLabel(
-            environment_entity_id=extracted.get('entity_id'),
+        label = EntityLabel(
+            entity_id=extracted.get('entity_id'),
             name=extracted.get('name'),
             value=extracted.get('value')
         )
@@ -32,12 +32,12 @@ class EnvironmentEntityLabelRepository(Repository):
         self.db.refresh(label)
         return label
 
-    def update(self, **kwargs) -> Optional[EnvironmentEntityLabel]:
+    def update(self, **kwargs) -> Optional[EntityLabel]:
         extracted = self.extract_kwargs(kwargs, ['label_id', 'new_name', 'new_value'])
         label_id = extracted.get('label_id')
         new_name = extracted.get('new_name')
         new_value = extracted.get('new_value')
-        label = self.get_by(label_id=label_id)
+        label = self.get_by_key(label_id=label_id)
         if not label:
             return None
         if new_name is not None:
@@ -48,6 +48,6 @@ class EnvironmentEntityLabelRepository(Repository):
         self.db.refresh(label)
         return label
 
-    def delete(self, entity: EnvironmentEntityLabel) -> None:
+    def delete(self, entity: EntityLabel) -> None:
         self.db.delete(entity)
         self.db.commit()
