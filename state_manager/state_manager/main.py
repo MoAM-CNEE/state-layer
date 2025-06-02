@@ -33,19 +33,19 @@ def get_entity_service(db: Session = Depends(get_db), mirror_manager_service: Mi
 @app.post("/entity/create")
 async def create_entity(rq: CreateEntityActionRQ,
                         entity_service: EntityService = Depends(get_entity_service)):
-    return await entity_service.create(rq.change_id, rq.definition)
+    return await entity_service.create(rq.change_id, rq.definition, rq.trigger_mirror_manager)
 
 
 @app.put("/entity/update")
 async def update_entity(rq: UpdateEntityActionRQ,
                         entity_service: EntityService = Depends(get_entity_service)):
-    return await entity_service.update(rq.change_id, rq.query, rq.lambdas)
+    return await entity_service.update(rq.change_id, rq.query, rq.lambdas, rq.trigger_mirror_manager)
 
 
 @app.delete("/entity/delete")
 async def delete_entity(rq: DeleteEntityActionRQ,
                         entity_service: EntityService = Depends(get_entity_service)):
-    return await entity_service.delete(rq.change_id, rq.query)
+    return await entity_service.delete(rq.change_id, rq.query, rq.trigger_mirror_manager)
 
 
 @app.get("/entity/read", response_model=ReadEntityActionRS)
