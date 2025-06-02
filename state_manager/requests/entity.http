@@ -4,7 +4,6 @@ Content-Type: application/json
 
 {
   "change_id": 0,
-  "type": "ENVIRONMENT_ENTITY",
   "definition": {
     "apiVersion": "kubernetes.crossplane.io/v1alpha2",
     "kind": "Object",
@@ -36,8 +35,7 @@ Content-Type: application/json
 
 {
   "change_id": 0,
-  "type": "ENVIRONMENT_ENTITY",
-  "filter_by": "select * from environment_entity where id > 1",
+  "filter_by": "select * from entity where id > 1",
   "lambdas": {
     ".spec.forProvider.manifest.metadata.name": "\"entity-test-full\""
   }
@@ -51,8 +49,7 @@ Content-Type: application/json
 
 {
   "change_id": 0,
-  "type": "ENVIRONMENT_ENTITY",
-  "filter_by": "select * from environment_entity where id > 1"
+  "filter_by": "select * from entity where id > 1"
 }
 
 ###

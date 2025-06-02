@@ -17,26 +17,17 @@ class DeleteFromControlPlaneRQ(BaseModel):
     namespace: Optional[str] = None
 
 
-class EntityType(str, Enum):
-    RULE = "RULE"
-    METRIC = "METRIC"
-    ENVIRONMENT_ENTITY = "ENVIRONMENT_ENTITY"
-
-
 class CreateEntityActionRQ(BaseModel):
     change_id: int
-    type: EntityType
     definition: Dict[str, Any]
 
 
 class UpdateEntityActionRQ(BaseModel):
     change_id: int
-    type: EntityType
     filter_by: str
     lambdas: Dict[str, str]
 
 
 class DeleteEntityActionRQ(BaseModel):
     change_id: int
-    type: EntityType
     filter_by: str
