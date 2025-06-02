@@ -20,8 +20,8 @@ spec:
         - name: state-manager
           image: proman3419/state-manager:0.0.0.1-read-endpoint
 #          imagePullPolicy: "IfNotPresent"
-#          imagePullPolicy: "Always"
-          imagePullPolicy: "Never" # local repository
+          imagePullPolicy: "Always"
+#          imagePullPolicy: "Never" # local repository
           resources:
             limits:
               cpu: 500m
