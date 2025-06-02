@@ -11,7 +11,7 @@ class EntityRepository(Repository):
     def get_by_key(self, **kwargs) -> Optional[Entity]:
         fields = ['api_version', 'kind', 'name', 'namespace']
         filters = self.extract_kwargs(kwargs, fields)
-        return self.db.query(Entity).query(**filters).first()
+        return self.db.query(Entity).filter_by(**filters).first()
 
     def get_by_query(self, query: str) -> List[Entity]:
         result = self.db.execute(text(query)).fetchall()
