@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: state-manager
-          image: proman3419/state-manager:0.0.0.3
+          image: proman3419/state-manager:0.0.0.3-support-lambdas-arrays-indices
 #          imagePullPolicy: "IfNotPresent"
           imagePullPolicy: "Always"
 #          imagePullPolicy: "Never" # local repository
