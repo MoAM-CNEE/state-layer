@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional
 
+import re
 import jq
 from sqlalchemy.orm import Session
 
@@ -79,12 +80,30 @@ class EntityService:
                 metadata.get('namespace', ''))
 
     def _get_value_from_dict_by_jq_key(self, _dict: dict, jq_key: str) -> str:
-        keys = jq_key[1:].split(".")  # Omit leading .
+        # Split the jq_key by dots, and also handle array indexing
+        keys = re.split(r'\.|\[|\]', jq_key.strip('.'))
+        keys = [key for key in keys if key]
+
         target = _dict
         for key in keys[:-1]:
-            if key not in target:
-                target[key] = {}
-            target = target[key]
+            if key.isdigit():
+                key = int(key)
+                if isinstance(target, list) and len(target) > key:
+                    target = target[key]
+                else:
+                    target = None
+                    break
+            else:
+                if key not in target:
+                    target[key] = {}
+                target = target[key]
+
         last_key = keys[-1]
-        value = target.get(last_key)
-        return value
+        if isinstance(target, list) and last_key.isdigit():
+            last_key = int(last_key)
+            if len(target) > last_key:
+                return target[last_key]
+            else:
+                return None
+        else:
+            return target.get(last_key)
