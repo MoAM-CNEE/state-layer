@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: state-manager
-          image: proman3419/state-manager:0.0.0.4
+          image: proman3419/state-manager:0.0.0.5
 #          imagePullPolicy: "IfNotPresent"
           imagePullPolicy: "Always"
 #          imagePullPolicy: "Never" # local repository
