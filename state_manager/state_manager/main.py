@@ -1,5 +1,7 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Response
 from sqlalchemy.orm import Session
+from sqlalchemy import text
+from prometheus_client import generate_latest, CONTENT_TYPE_LATEST, Gauge, CollectorRegistry
 
 from state_manager.api.request_models import CreateEntityActionRQ, UpdateEntityActionRQ, DeleteEntityActionRQ, \
     ReadEntityActionRQ
@@ -11,6 +13,10 @@ from state_manager.mirror_layer.mirror_manager_service import MirrorManagerServi
 app = FastAPI()
 db_manager = DatabaseSessionManager()
 mirror_manager_service = MirrorManagerService()
+
+# Prometheus
+registry = CollectorRegistry()
+entity_count_gauge = Gauge('state_manager_entity_count', 'Count of managed entities', registry=registry)
 
 
 def get_db():
@@ -53,3 +59,17 @@ async def read_entity(rq: ReadEntityActionRQ,
                       entity_service: EntityService = Depends(get_entity_service)):
     entities = await entity_service.read(rq.query)
     return ReadEntityActionRS(entities=[EntityDTO.model_validate(e) for e in entities])
+
+@app.get("/metrics")
+async def metrics(db: Session = Depends(get_db)):
+    update_entity_count(db)
+
+    data = generate_latest(registry)
+    return Response(content=data, media_type=CONTENT_TYPE_LATEST)
+
+def update_entity_count(db: Session):
+    try:
+        count = db.execute(text("SELECT COUNT(*) FROM entity")).scalar()
+        entity_count_gauge.set(count)
+    finally:
+        db.close()
