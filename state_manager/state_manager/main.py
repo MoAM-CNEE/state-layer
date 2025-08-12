@@ -14,9 +14,33 @@ app = FastAPI()
 db_manager = DatabaseSessionManager()
 mirror_manager_service = MirrorManagerService()
 
-# Prometheus
+# > Prometheus
 registry = CollectorRegistry()
-entity_count_gauge = Gauge('state_manager_entity_count', 'Count of managed entities', registry=registry)
+
+entity_count_gauge = Gauge(
+    'state_manager_entity_count',
+    'Count of managed entities',
+    registry=registry
+)
+
+message_service_entity_count_gauge = Gauge(
+    'state_manager_message_service_entity_count',
+    'Count of managed message-service entities',
+    registry=registry
+)
+
+kubernetes_entity_count_gauge = Gauge(
+    'state_manager_kubernetes_entity_count',
+    'Count of managed kubernetes entities',
+    registry=registry
+)
+
+openstack_entity_count_gauge = Gauge(
+    'state_manager_openstack_entity_count',
+    'Count of managed openstack entities',
+    registry=registry
+)
+# < Prometheus
 
 
 def get_db():
@@ -60,6 +84,7 @@ async def read_entity(rq: ReadEntityActionRQ,
     entities = await entity_service.read(rq.query)
     return ReadEntityActionRS(entities=[EntityDTO.model_validate(e) for e in entities])
 
+
 @app.get("/metrics")
 async def metrics(db: Session = Depends(get_db)):
     update_entity_count(db)
@@ -67,9 +92,26 @@ async def metrics(db: Session = Depends(get_db)):
     data = generate_latest(registry)
     return Response(content=data, media_type=CONTENT_TYPE_LATEST)
 
+
 def update_entity_count(db: Session):
     try:
-        count = db.execute(text("SELECT COUNT(*) FROM entity")).scalar()
+        message_service_count = db.execute(
+            text("SELECT COUNT(*) FROM entity WHERE definition->'$.apiVersion' LIKE '%dummymessageservice.crossplane.io%'")
+        ).scalar()
+        message_service_entity_count_gauge.set(message_service_count)
+
+        kubernetes_entity_count = db.execute(
+            text("SELECT COUNT(*) FROM entity WHERE definition->'$.apiVersion' LIKE 'kubernetes.crossplane.io%'")
+        ).scalar()
+        kubernetes_entity_count_gauge.set(kubernetes_entity_count)
+
+        openstack_entity_count = db.execute(
+            text("SELECT COUNT(*) FROM entity WHERE definition->'$.apiVersion' LIKE '%openstack.crossplane.io%'")
+        ).scalar()
+        openstack_entity_count_gauge.set(openstack_entity_count)
+
+        count = message_service_count + kubernetes_entity_count + openstack_entity_count
         entity_count_gauge.set(count)
+
     finally:
         db.close()
